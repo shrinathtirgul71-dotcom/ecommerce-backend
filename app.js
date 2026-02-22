@@ -4,28 +4,22 @@ const app = express();
 const mongoose = require("mongoose");
 require("./db/conn");
 const cookieParser = require('cookie-parser');
-
 const products = require("./models/productsSchema");
 const DefaultData = require("./defaultdata");
 const cors = require("cors");
 const router = require("./routes/router");
-
 app.use(express.json());
-app.use(cookieParser());  // 👈 removed empty string
+app.use(cookieParser());
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "https://ecommerce-frontend-v9tp.onrender.com",
   credentials: true
 }));
 app.use(router);
-
 const port = 8005;
-
 app.listen(port, () => {
   console.log(`server is running on port number ${port}`);
 });
-
 const axios = require('axios');
-
 app.get('/proxy-image', async (req, res) => {
     try {
         const imageUrl = req.query.url;
@@ -43,5 +37,4 @@ app.get('/proxy-image', async (req, res) => {
         res.status(404).send('Image not found');
     }
 });
-
 DefaultData();
