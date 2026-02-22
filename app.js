@@ -2,39 +2,46 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-require("./db/conn");
+require("./conn");  // fixed: was ./db/conn but conn.js is in root
 const cookieParser = require('cookie-parser');
-const products = require("./models/productsSchema");
 const DefaultData = require("./defaultdata");
 const cors = require("cors");
-const router = require("./routes/router");
+const router = require("./router");  // fixed: router.js is in root
+const axios = require('axios');
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: "https://ecommerce-frontend-v9tp.onrender.com",
+  origin: [
+    "http://localhost:3000",
+    "https://ecommerce-frontend-v9tp.onrender.com"
+  ],
   credentials: true
 }));
+
 app.use(router);
-const port = 8005;
+
+app.get('/proxy-image', async (req, res) => {
+  try {
+    const imageUrl = req.query.url;
+    const response = await axios.get(imageUrl, {
+      responseType: 'arraybuffer',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Referer': 'https://www.amazon.in'
+      }
+    });
+    res.set('Content-Type', response.headers['content-type']);
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(response.data);
+  } catch (error) {
+    res.status(404).send('Image not found');
+  }
+});
+
+DefaultData();
+
+const port = process.env.PORT || 8005;
 app.listen(port, () => {
   console.log(`server is running on port number ${port}`);
 });
-const axios = require('axios');
-app.get('/proxy-image', async (req, res) => {
-    try {
-        const imageUrl = req.query.url;
-        const response = await axios.get(imageUrl, {
-            responseType: 'arraybuffer',
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Referer': 'https://www.amazon.in'
-            }
-        });
-        res.set('Content-Type', response.headers['content-type']);
-        res.set('Cache-Control', 'public, max-age=86400');
-        res.send(response.data);
-    } catch (error) {
-        res.status(404).send('Image not found');
-    }
-});
-DefaultData();
