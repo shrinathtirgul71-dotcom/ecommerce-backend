@@ -2,25 +2,19 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-require("./conn");  // fixed: was ./db/conn but conn.js is in root
+require("./db/conn");
 const cookieParser = require('cookie-parser');
 const DefaultData = require("./defaultdata");
 const cors = require("cors");
-const router = require("./router");  // fixed: router.js is in root
+const router = require("./routes/router");
 const axios = require('axios');
-
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://ecommerce-frontend-v9tp.onrender.com"
-  ],
+  origin: "https://ecommerce-frontend-v9tp.onrender.com",
   credentials: true
 }));
-
 app.use(router);
-
 app.get('/proxy-image', async (req, res) => {
   try {
     const imageUrl = req.query.url;
@@ -38,9 +32,7 @@ app.get('/proxy-image', async (req, res) => {
     res.status(404).send('Image not found');
   }
 });
-
 DefaultData();
-
 const port = process.env.PORT || 8005;
 app.listen(port, () => {
   console.log(`server is running on port number ${port}`);
