@@ -86,9 +86,12 @@ router.post("/login", async (req, res) => {
     const token = await userlogin.generateAuthtoken();
     console.log("TOKEN:", token);
 
+    // ✅ FIXED: added secure: true and sameSite: "none" for cross-domain cookies
     res.cookie("Amazonweb", token, {
       expires: new Date(Date.now() + 900000),
-      httpOnly: true
+      httpOnly: true,
+      secure: true,
+      sameSite: "none"
     });
 
     return res.status(200).json({ userlogin, token });
@@ -164,18 +167,20 @@ router.delete("/remove/:id", authenticate, async (req, res) => {
 });
 
 // user logout api
-
 router.get("/logout", authenticate, async (req, res) => {
   try {
     req.rootUser.tokens = req.rootUser.tokens.filter((curelem) => {
       return curelem.token !== req.token;
     });
-    
-    res.clearCookie("Amazonweb", { 
+
+    // ✅ FIXED: added secure: true and sameSite: "none"
+    res.clearCookie("Amazonweb", {
       path: "/",
-      httpOnly: true  // 👈 add this
+      httpOnly: true,
+      secure: true,
+      sameSite: "none"
     });
-    
+
     await req.rootUser.save();
     res.status(201).json(req.rootUser.tokens);
     console.log("user logout");
@@ -186,32 +191,32 @@ router.get("/logout", authenticate, async (req, res) => {
 
 // update name
 router.put("/updatename", authenticate, async (req, res) => {
-    try {
-        const { fname } = req.body;
-        req.rootUser.fname = fname;
-        await req.rootUser.save();
-        res.status(201).json(req.rootUser);
-    } catch (error) {
-        console.log("error: " + error);
-        res.status(400).json({ error: "Failed to update name" });
-    }
+  try {
+    const { fname } = req.body;
+    req.rootUser.fname = fname;
+    await req.rootUser.save();
+    res.status(201).json(req.rootUser);
+  } catch (error) {
+    console.log("error: " + error);
+    res.status(400).json({ error: "Failed to update name" });
+  }
 });
 
 // update password
 router.put("/updatepassword", authenticate, async (req, res) => {
-    try {
-        const { currentPassword, newPassword } = req.body;
-        const isMatch = await bcrypt.compare(currentPassword, req.rootUser.password);
-        if (!isMatch) {
-            return res.status(400).json({ error: "Current password is incorrect" });
-        }
-        req.rootUser.password = newPassword;
-        await req.rootUser.save();
-        res.status(201).json({ message: "Password updated successfully" });
-    } catch (error) {
-        console.log("error: " + error);
-        res.status(400).json({ error: "Failed to update password" });
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const isMatch = await bcrypt.compare(currentPassword, req.rootUser.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Current password is incorrect" });
     }
+    req.rootUser.password = newPassword;
+    await req.rootUser.save();
+    res.status(201).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.log("error: " + error);
+    res.status(400).json({ error: "Failed to update password" });
+  }
 });
 
 module.exports = router;
